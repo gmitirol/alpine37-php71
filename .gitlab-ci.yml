@@ -1,0 +1,232 @@
+before_script:
+  - cp $CI_SERVER_TLS_CA_FILE /usr/local/share/ca-certificates/
+  - update-ca-certificates
+
+cache: &cache
+  untracked: false
+
+.tags-defaults-docker: &tags-defaults-docker
+  - shared
+
+variables:
+  TEMP_IMAGE: ci-build/$CI_PROJECT_PATH:$CI_PIPELINE_ID
+  TEMP_IMAGE_PATH: build/image.tar
+  META_PATH: build/metadata
+  META_PHP_VERSION: $META_PATH/php-version.txt
+  PHP_TESTS_REPOSITORY: https://github.com/gmitirol/php-tests.git
+  VERSION_TOOL_REPOSITORY: https://github.com/xelan/bash-version-tool.git
+
+stages:
+  - build
+  - test_php
+  - test_web
+  - release
+
+build:
+  stage: build
+  image: docker:latest
+  cache:
+    <<: *cache
+  artifacts:
+    expire_in: 1 hour
+    paths:
+      - $TEMP_IMAGE_PATH
+  services:
+    - name: $CI_REGISTRY/docker/dind:latest
+      alias: docker
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - echo $CI_COMMIT_REF_NAME > PHP_BUILD
+    - docker build --tag $TEMP_IMAGE . --build-arg REGISTRY_PATH=$CI_REGISTRY/docker --build-arg GITHUB_TOKEN
+    - mkdir -p build
+    - docker save --output $TEMP_IMAGE_PATH $TEMP_IMAGE
+  tags: *tags-defaults-docker
+
+test_php_base:
+  stage: test_php
+  image: docker:latest
+  artifacts:
+    expire_in: 1 hour
+    paths:
+      - $META_PATH
+  services:
+    - name: $CI_REGISTRY/docker/dind:latest
+      alias: docker
+  script:
+    - mkdir -p $META_PATH
+    - docker load --input $TEMP_IMAGE_PATH --quiet
+    - docker run --rm $TEMP_IMAGE sh -c 'grep -E "^date.timezone = $(cat /etc/TZ)" /etc/php7/php.ini'
+    - docker run --rm $TEMP_IMAGE sh -c 'composer --version'
+    - docker run --rm $TEMP_IMAGE sh -c 'sami --version'
+    - docker run --rm $TEMP_IMAGE sh -c 'phpcs --version'
+    - docker run --rm -e PHP_TESTS_REPOSITORY $TEMP_IMAGE sh -c 'php-ext.sh enable-all && php-ext.sh show && git clone "$PHP_TESTS_REPOSITORY" && cd php-tests && composer install -q --no-progress && vendor/bin/phpunit -vv --group php_base'
+    - docker run --rm $TEMP_IMAGE sh -c 'php -r "printf(\"%s.%s.%s\", PHP_MAJOR_VERSION, PHP_MINOR_VERSION, PHP_RELEASE_VERSION);"' > $META_PHP_VERSION
+  tags: *tags-defaults-docker
+
+test_php_mysql:
+  stage: test_php
+  image: docker:latest
+  services:
+    - name: $CI_REGISTRY/docker/dind:latest
+      alias: docker
+    - name: mysql:5.6
+      alias: $MYSQL_HOST
+  variables:
+    MYSQL_HOST: "mysql"
+    MYSQL_PORT: 3306
+    MYSQL_USER: "phptests"
+    MYSQL_PASSWORD: $(head -c 32 /dev/urandom | base64)
+    MYSQL_DATABASE: "phptests"
+    MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+  script:
+    - docker load --input $TEMP_IMAGE_PATH --quiet
+    - MYSQL_IP=$(getent hosts $MYSQL_HOST | awk '{print $1}')
+    - docker run --rm --add-host $MYSQL_HOST:$MYSQL_IP -e MYSQL_HOST -e MYSQL_PORT -e MYSQL_DATABASE -e MYSQL_USER -e MYSQL_PASSWORD -e PHP_TESTS_REPOSITORY $TEMP_IMAGE sh -c 'php-ext.sh enable-all && php-ext.sh show && git clone "$PHP_TESTS_REPOSITORY" && cd php-tests && composer install -q --no-progress && vendor/bin/phpunit -vv --group php_mysql'
+  tags: *tags-defaults-docker
+
+test_php_memcached:
+  stage: test_php
+  image: docker:latest
+  services:
+    - name: $CI_REGISTRY/docker/dind:latest
+      alias: docker
+    - name: memcached:1.5
+      alias: $MEMCACHED_HOST
+  variables:
+    MEMCACHED_HOST: "memcached"
+    MEMCACHED_PORT: 11211
+  script:
+    - docker load --input $TEMP_IMAGE_PATH --quiet
+    - MEMCACHED_IP=$(getent hosts $MEMCACHED_HOST | awk '{print $1}')
+    - docker run --rm --add-host $MEMCACHED_HOST:$MEMCACHED_IP -e MEMCACHED_HOST -e MEMCACHED_PORT -e PHP_TESTS_REPOSITORY $TEMP_IMAGE sh -c 'php-ext.sh enable-all && php-ext.sh show && git clone "$PHP_TESTS_REPOSITORY" && cd php-tests && composer install -q --no-progress && vendor/bin/phpunit -vv --group php_memcached'
+  tags: *tags-defaults-docker
+
+test_php_https:
+  stage: test_php
+  image: docker:latest
+  services:
+    - name: $CI_REGISTRY/docker/dind:latest
+      alias: docker
+  variables:
+    HTTPS_TEST_HOST: "www.google.com"
+  script:
+    - docker load --input $TEMP_IMAGE_PATH --quiet
+    - docker run --rm -e HTTPS_TEST_HOST -e PHP_TESTS_REPOSITORY $TEMP_IMAGE sh -c 'php-ext.sh enable-all && php-ext.sh show && git clone "$PHP_TESTS_REPOSITORY" && cd php-tests && composer install -q --no-progress && vendor/bin/phpunit -vv --group php_https'
+  tags: *tags-defaults-docker
+
+test_php_imap:
+  stage: test_php
+  image: docker:latest
+  services:
+    - name: $CI_REGISTRY/docker/dind:latest
+      alias: docker
+    - name: $CI_REGISTRY/docker/minimal-imap:v1
+      alias: imap
+  variables:
+    IMAP_HOST: "imap"
+    EMAIL_SERVER: "$IMAP_HOST:143/imap"
+    EMAIL_USERNAME: "imap"
+    EMAIL_PASSWORD: "imap"
+  script:
+    - cat /etc/hosts
+    - docker load --input $TEMP_IMAGE_PATH --quiet
+    - IMAP_IP=$(getent hosts $IMAP_HOST | awk '{print $1}')
+    - docker run --rm --add-host $IMAP_HOST:$IMAP_IP -e EMAIL_SERVER -e EMAIL_USERNAME -e EMAIL_PASSWORD -e PHP_TESTS_REPOSITORY $TEMP_IMAGE sh -c 'php-ext.sh enable-all && php-ext.sh show && git clone "$PHP_TESTS_REPOSITORY" && cd php-tests && composer install -q --no-progress && vendor/bin/phpunit -vv --group php_imap'
+  tags: *tags-defaults-docker
+
+test_web_static:
+  stage: test_web
+  image: docker:latest
+  services:
+    - name: $CI_REGISTRY/docker/dind:latest
+      alias: docker
+  script:
+    - docker load --input $TEMP_IMAGE_PATH --quiet
+    - CONTAINER=$(docker run -d $TEMP_IMAGE supervisord)
+    - docker exec $CONTAINER sh -c 'mkdir -p /home/project/www'
+    - docker exec $CONTAINER sh -c 'setup-nginx.sh static /home/project/www'
+    - docker exec $CONTAINER sh -c 'supervisorctl restart nginx php-fpm'
+    - docker exec $CONTAINER sh -c 'echo example > /home/project/www/example.txt'
+    - docker exec $CONTAINER sh -c '[ "example" == "$(curl -s http://localhost/example.txt)" ]'
+    - docker exec $CONTAINER sh -c 'echo "<?php echo \"Hello World!\";" > /home/project/www/example.php'
+    - docker exec $CONTAINER sh -c '[ "404" == "$(curl -s -o /dev/null -w "%{http_code}" http://localhost/example.php)" ]'
+    - docker exec $CONTAINER sh -c 'echo "secret file contents" > /home/project/www/.secret'
+    - docker exec $CONTAINER sh -c '[ "403" == "$(curl -s -o /dev/null -w "%{http_code}" http://localhost/.secret)" ]'
+    - docker kill $CONTAINER
+  tags: *tags-defaults-docker
+
+test_web_php:
+  stage: test_web
+  image: docker:latest
+  services:
+    - name: $CI_REGISTRY/docker/dind:latest
+      alias: docker
+  script:
+    - docker load --input $TEMP_IMAGE_PATH --quiet
+    - CONTAINER=$(docker run -d $TEMP_IMAGE supervisord)
+    - docker exec $CONTAINER sh -c 'mkdir -p /home/project/www'
+    - docker exec $CONTAINER sh -c 'setup-nginx.sh php /home/project/www'
+    - docker exec $CONTAINER sh -c 'supervisorctl restart nginx php-fpm'
+    - docker exec $CONTAINER sh -c 'echo example > /home/project/www/example.txt'
+    - docker exec $CONTAINER sh -c '[ "example" == "$(curl -s http://localhost/example.txt)" ]'
+    - docker exec $CONTAINER sh -c 'echo "<?php echo \"Hello World!\";" > /home/project/www/example.php'
+    - docker exec $CONTAINER sh -c '[ "Hello World!" == "$(curl -s http://localhost/example.php)" ]'
+    - docker exec $CONTAINER sh -c 'echo "<?php echo \"Index is working!\";" > /home/project/www/index.php'
+    - docker exec $CONTAINER sh -c '[ "Index is working!" == "$(curl -s http://localhost/)" ]'
+    - docker kill $CONTAINER
+  tags: *tags-defaults-docker
+
+test_web_symfony:
+  stage: test_web
+  image: docker:latest
+  services:
+    - name: $CI_REGISTRY/docker/dind:latest
+      alias: docker
+  script:
+    - docker load --input $TEMP_IMAGE_PATH --quiet
+    - CONTAINER=$(docker run -d $TEMP_IMAGE supervisord)
+    - docker exec $CONTAINER sh -c 'mkdir -p /home/project/www'
+    - docker exec $CONTAINER sh -c 'setup-nginx.sh symfony /home/project/www'
+    - docker exec $CONTAINER sh -c 'supervisorctl restart nginx php-fpm'
+    # The front controller (app.php) should be accessible
+    - docker exec $CONTAINER sh -c 'echo "<?php echo \$_SERVER[REQUEST_URI];" > /home/project/www/app.php'
+    - docker exec $CONTAINER sh -c '[ "/" == "$(curl -s http://localhost/)" ]'
+    - docker exec $CONTAINER sh -c '[ "/example/route" == "$(curl -s http://localhost/example/route)" ]'
+    # The front controller (app.php) should be not be accessible directly (via localhost/app.php)
+    - docker exec $CONTAINER sh -c 'echo "<?php echo \$_SERVER[REQUEST_URI];" > /home/project/www/app.php'
+    - docker exec $CONTAINER sh -c '[ "404" == "$(curl -s -o /dev/null -w "%{http_code}" http://localhost/app.php)" ]'
+    # Other PHP files should be not be accessible
+    - docker exec $CONTAINER sh -c 'echo "<?php \$_SERVER[REQUEST_URI];" > /home/project/www/example.php'
+    - docker exec $CONTAINER sh -c '[ "404" == "$(curl -s -o /dev/null -w "%{http_code}" http://localhost/example.php)" ]'
+    # Real files should be served directly
+    - docker exec $CONTAINER sh -c 'echo real_file > /home/project/www/real_file'
+    - docker exec $CONTAINER sh -c '[ "real_file" == "$(curl -s http://localhost/real_file)" ]'
+    - docker kill $CONTAINER
+  tags: *tags-defaults-docker
+
+release:
+  stage: release
+  image: docker:latest
+  services:
+    - name: $CI_REGISTRY/docker/dind:latest
+      alias: docker
+  only:
+    - /^[0-9]+\.[0-9]+\.[0-9]$/
+  script:
+    - docker load --input $TEMP_IMAGE_PATH --quiet
+    - apk add --no-cache bash git;
+      docker tag $TEMP_IMAGE $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME;
+      git clone "$VERSION_TOOL_REPOSITORY" /tmp/version;
+      VERSIONS="$(git tag --list)";
+      MAJOR=$(bash /tmp/version/version.sh $CI_COMMIT_REF_NAME MAJOR);
+      if [ -z "$VERSIONS" ] || [ $(bash /tmp/version/versionhighest.sh "$VERSIONS" $CI_COMMIT_REF_NAME) == 'YES' ]; then
+        docker tag $TEMP_IMAGE $CI_REGISTRY_IMAGE:php$(cat $META_PHP_VERSION | tr -d '\n');
+        docker tag $TEMP_IMAGE $CI_REGISTRY_IMAGE:latest;
+      fi;
+      VERSIONS_MAJOR=$(echo "$VERSIONS" | grep -E "^$MAJOR\." || echo '');
+      if [ -z "$VERSIONS_MAJOR" ] || [ $(bash /tmp/version/versionhighest.sh "$VERSIONS_MAJOR" $CI_COMMIT_REF_NAME) == 'YES' ]; then
+        docker tag $TEMP_IMAGE $CI_REGISTRY_IMAGE:v$MAJOR;
+      fi;
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker push $CI_REGISTRY_IMAGE
+  tags: *tags-defaults-docker
