@@ -72,6 +72,7 @@ sed -i \
     -e 's/^listen =.*/listen = \/var\/run\/php7-fpm.sock/' \
     -e 's/^;listen.owner =.*/listen.owner = nginx/' \
     -e 's/^;listen.group =.*/listen.group = nginx/' \
+    -e 's/^;catch_workers_output =.*/catch_workers_output = yes/' \
     /etc/php7/php-fpm.d/www.conf
 
 # configure supervisord
@@ -119,7 +120,7 @@ EOF
 
 cat <<'EOF' >/etc/supervisor/conf.d/php-fpm.conf
 [program:php-fpm]
-command=/usr/sbin/php-fpm7 --nodaemonize
+command=/usr/sbin/php-fpm7 --nodaemonize --force-stderr
 stdout_logfile=/dev/stdout
 stdout_logfile_maxbytes=0
 stderr_logfile=/dev/stderr
