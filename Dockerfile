@@ -12,7 +12,8 @@ RUN set -xe && \
   sh /usr/local/bin/php-ext.sh disable-non-default && \
   sh /usr/local/bin/php-ext.sh show && \
   sh /usr/local/bin/install-nginx.sh && \
-  rm /usr/local/bin/install-nginx.sh
+  rm /usr/local/bin/install-nginx.sh && \
+  echo 'TLS_CACERT /etc/ssl/certs/ca-certificates.crt' >> /etc/openldap/ldap.conf
 
 RUN set -xe && \
   /bin/sed -i \
