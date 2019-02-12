@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.3.1] - 2019-02-12
+- Rebuild image (composer update to fix dependency resolution failures, recent PHP fixes)
+
 ## [2.3.0] - 2018-08-27
 - Use CA certificates for LDAP connections
 - Use specified version of base image for reproducible builds
