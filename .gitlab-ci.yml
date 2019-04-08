@@ -204,6 +204,34 @@ test_web_symfony:
     - docker kill $CONTAINER
   tags: *tags-defaults-docker
 
+test_web_symfony4:
+  stage: test_web
+  image: docker:latest
+  services:
+    - name: $CI_REGISTRY/docker/dind:latest
+      alias: docker
+  script:
+    - docker load --input $TEMP_IMAGE_PATH --quiet
+    - CONTAINER=$(docker run -d $TEMP_IMAGE supervisord)
+    - docker exec $CONTAINER sh -c 'mkdir -p /home/project/www'
+    - docker exec $CONTAINER sh -c 'setup-nginx.sh symfony4 /home/project/www'
+    - docker exec $CONTAINER sh -c 'supervisorctl restart nginx php-fpm'
+    # The front controller (index.php) should be accessible
+    - docker exec $CONTAINER sh -c 'echo "<?php echo \$_SERVER[REQUEST_URI];" > /home/project/www/index.php'
+    - docker exec $CONTAINER sh -c '[ "/" == "$(curl -s http://localhost/)" ]'
+    - docker exec $CONTAINER sh -c '[ "/example/route" == "$(curl -s http://localhost/example/route)" ]'
+    # The front controller (index.php) should be not be accessible directly (via localhost/index.php)
+    - docker exec $CONTAINER sh -c 'echo "<?php echo \$_SERVER[REQUEST_URI];" > /home/project/www/index.php'
+    - docker exec $CONTAINER sh -c '[ "404" == "$(curl -s -o /dev/null -w "%{http_code}" http://localhost/index.php)" ]'
+    # Other PHP files should be not be accessible
+    - docker exec $CONTAINER sh -c 'echo "<?php \$_SERVER[REQUEST_URI];" > /home/project/www/example.php'
+    - docker exec $CONTAINER sh -c '[ "404" == "$(curl -s -o /dev/null -w "%{http_code}" http://localhost/example.php)" ]'
+    # Real files should be served directly
+    - docker exec $CONTAINER sh -c 'echo real_file > /home/project/www/real_file'
+    - docker exec $CONTAINER sh -c '[ "real_file" == "$(curl -s http://localhost/real_file)" ]'
+    - docker kill $CONTAINER
+  tags: *tags-defaults-docker
+
 release:
   stage: release
   image: docker:latest
