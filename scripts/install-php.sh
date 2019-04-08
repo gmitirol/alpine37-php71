@@ -7,7 +7,7 @@ source php-extensions.sh
 EXTENSIONS=$(get_php_extensions);
 
 apk update;
-apk add php7 imagemagick;
+apk add php7 php7-fpm imagemagick;
 
 for EXTENSION in $EXTENSIONS; do
     if [ -z "$EXTENSION" ]; then
