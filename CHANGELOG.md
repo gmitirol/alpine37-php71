@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.5.0] - 2019-05-14
+- Rebuild image
+
 ## [2.4.0] - 2019-04-08
 - Add configuration profile for Symfony 4
 - Do not treat PHP-FPM as an extension
@@ -28,7 +31,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## 2.0.0 - 2018-03-07
 - Initial public release
 
-[Unreleased]:  https://github.com/gmitirol/alpine37-php71/compare/2.4.0...HEAD
+[Unreleased]: https://github.com/gmitirol/alpine37-php71/compare/2.5.0...HEAD
+[2.5.0]: https://github.com/gmitirol/alpine37-php71/compare/2.4.0...2.5.0
 [2.4.0]: https://github.com/gmitirol/alpine37-php71/compare/2.3.1...2.4.0
 [2.3.1]: https://github.com/gmitirol/alpine37-php71/compare/2.3.0...2.3.1
 [2.3.0]: https://github.com/gmitirol/alpine37-php71/compare/2.2.0...2.3.0
