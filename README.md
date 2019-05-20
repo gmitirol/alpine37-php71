@@ -23,6 +23,8 @@ Included tools:
 
 For running the PHP applications, a locked default user `project` with UID 1000 is created.
 
+To build the docker image, do not forget to adapt the base image version in `Dockerfile` where necessary.
+
 Usage example (with custom GitLab server)
 -----------------------------------------
 
