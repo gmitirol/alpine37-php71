@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.9.2] - 2019-12-17
+- Update alpine base image
+
 ## [2.9.1] - 2019-11-27
 - Update alpine base image
 
@@ -58,7 +61,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## 2.0.0 - 2018-03-07
 - Initial public release
 
-[Unreleased]: https://github.com/gmitirol/alpine37-php71/compare/2.9.1...HEAD
+[Unreleased]: https://github.com/gmitirol/alpine37-php71/compare/2.9.2...HEAD
+[2.9.2]: https://github.com/gmitirol/alpine37-php71/compare/2.9.1...2.9.2
 [2.9.1]: https://github.com/gmitirol/alpine37-php71/compare/2.9.0...2.9.1
 [2.9.0]: https://github.com/gmitirol/alpine37-php71/compare/2.8.1...2.9.0
 [2.8.1]: https://github.com/gmitirol/alpine37-php71/compare/2.8.0...2.8.1
