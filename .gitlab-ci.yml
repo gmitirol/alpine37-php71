@@ -239,7 +239,7 @@ release:
     - name: $CI_REGISTRY/docker/dind:latest
       alias: docker
   only:
-    - /^[0-9]+\.[0-9]+\.[0-9]$/
+    - /^[0-9]+\.[0-9]+\.[0-9]+$/
   script:
     - docker load --input $TEMP_IMAGE_PATH --quiet
     - apk add --no-cache bash git;
