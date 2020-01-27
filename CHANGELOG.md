@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.10.0] - 2020-01-27
+- Rebuild image for latest PHP and library updates
+
 ## [2.9.3] - 2020-01-07
 - Update alpine base image
 - Fix version regex
@@ -65,7 +68,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## 2.0.0 - 2018-03-07
 - Initial public release
 
-[Unreleased]: https://github.com/gmitirol/alpine37-php71/compare/2.9.3...HEAD
+[Unreleased]: https://github.com/gmitirol/alpine37-php71/compare/2.10.0...HEAD
+[2.10.0]: https://github.com/gmitirol/alpine37-php71/compare/2.9.3...2.10.0
 [2.9.3]: https://github.com/gmitirol/alpine37-php71/compare/2.9.2...2.9.3
 [2.9.2]: https://github.com/gmitirol/alpine37-php71/compare/2.9.1...2.9.2
 [2.9.1]: https://github.com/gmitirol/alpine37-php71/compare/2.9.0...2.9.1
