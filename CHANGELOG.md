@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.10.2] - 2020-12-03
+- Fix superglobal access in tests
+
 ## [2.10.1] - 2020-06-03
 - Update alpine base image
 - Use new docker repo
@@ -72,7 +75,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## 2.0.0 - 2018-03-07
 - Initial public release
 
-[Unreleased]: https://github.com/gmitirol/alpine37-php71/compare/2.10.1...HEAD
+[Unreleased]: https://github.com/gmitirol/alpine37-php71/compare/2.10.2...HEAD
+[2.10.2]: https://github.com/gmitirol/alpine37-php71/compare/2.10.1...2.10.2
 [2.10.1]: https://github.com/gmitirol/alpine37-php71/compare/2.10.0...2.10.1
 [2.10.0]: https://github.com/gmitirol/alpine37-php71/compare/2.9.3...2.10.0
 [2.9.3]: https://github.com/gmitirol/alpine37-php71/compare/2.9.2...2.9.3

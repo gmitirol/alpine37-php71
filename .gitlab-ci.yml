@@ -189,14 +189,14 @@ test_web_symfony:
     - docker exec $CONTAINER sh -c 'setup-nginx.sh symfony /home/project/www'
     - docker exec $CONTAINER sh -c 'supervisorctl restart nginx php-fpm'
     # The front controller (app.php) should be accessible
-    - docker exec $CONTAINER sh -c 'echo "<?php echo \$_SERVER[REQUEST_URI];" > /home/project/www/app.php'
+    - docker exec $CONTAINER sh -c 'echo "<?php echo \$_SERVER[\"REQUEST_URI\"];" > /home/project/www/app.php'
     - docker exec $CONTAINER sh -c '[ "/" == "$(curl -s http://localhost/)" ]'
     - docker exec $CONTAINER sh -c '[ "/example/route" == "$(curl -s http://localhost/example/route)" ]'
     # The front controller (app.php) should be not be accessible directly (via localhost/app.php)
-    - docker exec $CONTAINER sh -c 'echo "<?php echo \$_SERVER[REQUEST_URI];" > /home/project/www/app.php'
+    - docker exec $CONTAINER sh -c 'echo "<?php echo \$_SERVER[\"REQUEST_URI\"];" > /home/project/www/app.php'
     - docker exec $CONTAINER sh -c '[ "404" == "$(curl -s -o /dev/null -w "%{http_code}" http://localhost/app.php)" ]'
     # Other PHP files should be not be accessible
-    - docker exec $CONTAINER sh -c 'echo "<?php \$_SERVER[REQUEST_URI];" > /home/project/www/example.php'
+    - docker exec $CONTAINER sh -c 'echo "<?php \$_SERVER[\"REQUEST_URI\"];" > /home/project/www/example.php'
     - docker exec $CONTAINER sh -c '[ "404" == "$(curl -s -o /dev/null -w "%{http_code}" http://localhost/example.php)" ]'
     # Real files should be served directly
     - docker exec $CONTAINER sh -c 'echo real_file > /home/project/www/real_file'
@@ -217,14 +217,14 @@ test_web_symfony4:
     - docker exec $CONTAINER sh -c 'setup-nginx.sh symfony4 /home/project/www'
     - docker exec $CONTAINER sh -c 'supervisorctl restart nginx php-fpm'
     # The front controller (index.php) should be accessible
-    - docker exec $CONTAINER sh -c 'echo "<?php echo \$_SERVER[REQUEST_URI];" > /home/project/www/index.php'
+    - docker exec $CONTAINER sh -c 'echo "<?php echo \$_SERVER[\"REQUEST_URI\"];" > /home/project/www/index.php'
     - docker exec $CONTAINER sh -c '[ "/" == "$(curl -s http://localhost/)" ]'
     - docker exec $CONTAINER sh -c '[ "/example/route" == "$(curl -s http://localhost/example/route)" ]'
     # The front controller (index.php) should be not be accessible directly (via localhost/index.php)
-    - docker exec $CONTAINER sh -c 'echo "<?php echo \$_SERVER[REQUEST_URI];" > /home/project/www/index.php'
+    - docker exec $CONTAINER sh -c 'echo "<?php echo \$_SERVER[\"REQUEST_URI\"];" > /home/project/www/index.php'
     - docker exec $CONTAINER sh -c '[ "404" == "$(curl -s -o /dev/null -w "%{http_code}" http://localhost/index.php)" ]'
     # Other PHP files should be not be accessible
-    - docker exec $CONTAINER sh -c 'echo "<?php \$_SERVER[REQUEST_URI];" > /home/project/www/example.php'
+    - docker exec $CONTAINER sh -c 'echo "<?php \$_SERVER[\"REQUEST_URI\"];" > /home/project/www/example.php'
     - docker exec $CONTAINER sh -c '[ "404" == "$(curl -s -o /dev/null -w "%{http_code}" http://localhost/example.php)" ]'
     # Real files should be served directly
     - docker exec $CONTAINER sh -c 'echo real_file > /home/project/www/real_file'
