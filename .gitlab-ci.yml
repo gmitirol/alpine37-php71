@@ -24,7 +24,7 @@ stages:
 
 build:
   stage: build
-  image: $CI_REGISTRY/docker/docker:latest
+  image: $CI_REGISTRY/docker/docker:20
   cache:
     <<: *cache
   artifacts:
@@ -32,7 +32,7 @@ build:
     paths:
       - $TEMP_IMAGE_PATH
   services:
-    - name: $CI_REGISTRY/docker/docker:dind
+    - name: $CI_REGISTRY/docker/docker:20-dind
       alias: docker
   script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
@@ -44,13 +44,13 @@ build:
 
 test_php_base:
   stage: test_php
-  image: $CI_REGISTRY/docker/docker:latest
+  image: $CI_REGISTRY/docker/docker:20
   artifacts:
     expire_in: 1 hour
     paths:
       - $META_PATH
   services:
-    - name: $CI_REGISTRY/docker/docker:dind
+    - name: $CI_REGISTRY/docker/docker:20-dind
       alias: docker
   script:
     - mkdir -p $META_PATH
@@ -65,9 +65,9 @@ test_php_base:
 
 test_php_mysql:
   stage: test_php
-  image: $CI_REGISTRY/docker/docker:latest
+  image: $CI_REGISTRY/docker/docker:20
   services:
-    - name: $CI_REGISTRY/docker/docker:dind
+    - name: $CI_REGISTRY/docker/docker:20-dind
       alias: docker
     - name: mysql:5.6
       alias: $MYSQL_HOST
@@ -86,9 +86,9 @@ test_php_mysql:
 
 test_php_memcached:
   stage: test_php
-  image: $CI_REGISTRY/docker/docker:latest
+  image: $CI_REGISTRY/docker/docker:20
   services:
-    - name: $CI_REGISTRY/docker/docker:dind
+    - name: $CI_REGISTRY/docker/docker:20-dind
       alias: docker
     - name: memcached:1.5
       alias: $MEMCACHED_HOST
@@ -103,9 +103,9 @@ test_php_memcached:
 
 test_php_https:
   stage: test_php
-  image: $CI_REGISTRY/docker/docker:latest
+  image: $CI_REGISTRY/docker/docker:20
   services:
-    - name: $CI_REGISTRY/docker/docker:dind
+    - name: $CI_REGISTRY/docker/docker:20-dind
       alias: docker
   variables:
     HTTPS_TEST_HOST: "www.google.com"
@@ -116,9 +116,9 @@ test_php_https:
 
 test_php_imap:
   stage: test_php
-  image: $CI_REGISTRY/docker/docker:latest
+  image: $CI_REGISTRY/docker/docker:20
   services:
-    - name: $CI_REGISTRY/docker/docker:dind
+    - name: $CI_REGISTRY/docker/docker:20-dind
       alias: docker
     - name: $CI_REGISTRY/docker/minimal-imap:v1
       alias: imap
@@ -136,9 +136,9 @@ test_php_imap:
 
 test_web_static:
   stage: test_web
-  image: $CI_REGISTRY/docker/docker:latest
+  image: $CI_REGISTRY/docker/docker:20
   services:
-    - name: $CI_REGISTRY/docker/docker:dind
+    - name: $CI_REGISTRY/docker/docker:20-dind
       alias: docker
   script:
     - docker load --input $TEMP_IMAGE_PATH --quiet
@@ -157,9 +157,9 @@ test_web_static:
 
 test_web_php:
   stage: test_web
-  image: $CI_REGISTRY/docker/docker:latest
+  image: $CI_REGISTRY/docker/docker:20
   services:
-    - name: $CI_REGISTRY/docker/docker:dind
+    - name: $CI_REGISTRY/docker/docker:20-dind
       alias: docker
   script:
     - docker load --input $TEMP_IMAGE_PATH --quiet
@@ -178,9 +178,9 @@ test_web_php:
 
 test_web_symfony:
   stage: test_web
-  image: $CI_REGISTRY/docker/docker:latest
+  image: $CI_REGISTRY/docker/docker:20
   services:
-    - name: $CI_REGISTRY/docker/docker:dind
+    - name: $CI_REGISTRY/docker/docker:20-dind
       alias: docker
   script:
     - docker load --input $TEMP_IMAGE_PATH --quiet
@@ -206,9 +206,9 @@ test_web_symfony:
 
 test_web_symfony4:
   stage: test_web
-  image: $CI_REGISTRY/docker/docker:latest
+  image: $CI_REGISTRY/docker/docker:20
   services:
-    - name: $CI_REGISTRY/docker/docker:dind
+    - name: $CI_REGISTRY/docker/docker:20-dind
       alias: docker
   script:
     - docker load --input $TEMP_IMAGE_PATH --quiet
@@ -234,9 +234,9 @@ test_web_symfony4:
 
 release:
   stage: release
-  image: $CI_REGISTRY/docker/docker:latest
+  image: $CI_REGISTRY/docker/docker:20
   services:
-    - name: $CI_REGISTRY/docker/docker:dind
+    - name: $CI_REGISTRY/docker/docker:20-dind
       alias: docker
   only:
     - /^[0-9]+\.[0-9]+\.[0-9]+$/
@@ -256,5 +256,5 @@ release:
         docker tag $TEMP_IMAGE $CI_REGISTRY_IMAGE:v$MAJOR;
       fi;
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker push $CI_REGISTRY_IMAGE
+    - docker push --all-tags $CI_REGISTRY_IMAGE
   tags: *tags-defaults-docker
