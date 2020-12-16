@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.10.3] - 2020-12-16
+- Update alpine base image
+- Use tagged versions of docker and dind, use new --all-tags parameter
+
 ## [2.10.2] - 2020-12-03
 - Fix superglobal access in tests
 
@@ -75,7 +79,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## 2.0.0 - 2018-03-07
 - Initial public release
 
-[Unreleased]: https://github.com/gmitirol/alpine37-php71/compare/2.10.2...HEAD
+[Unreleased]: https://github.com/gmitirol/alpine37-php71/compare/2.10.3...HEAD
+[2.10.3]: https://github.com/gmitirol/alpine37-php71/compare/2.10.2...2.10.3
 [2.10.2]: https://github.com/gmitirol/alpine37-php71/compare/2.10.1...2.10.2
 [2.10.1]: https://github.com/gmitirol/alpine37-php71/compare/2.10.0...2.10.1
 [2.10.0]: https://github.com/gmitirol/alpine37-php71/compare/2.9.3...2.10.0
